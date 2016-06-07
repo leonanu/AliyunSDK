@@ -4,7 +4,7 @@ setup(
     name='AliyunSDK',
     version='1.0',
     packages=['AliyunSDK'],
-    install_requires=[,],
+    install_requires=[],
     url='https://github.com/leonanu/AliyunSDK',
     license='MIT',
     author='Nanu',
