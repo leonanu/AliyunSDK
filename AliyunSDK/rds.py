@@ -359,6 +359,18 @@ class RDS(object):
 
         return ret
 
+    # Show IP white list of specific instance.
+    def show_instance_whitelist(self, instance_id):
+        req = {'Action':'DescribeDBInstanceIPArrayList',
+               'DBInstanceId':instance_id
+               }
+
+        res = self.API.request(req)
+
+        ret = res['Items']['DBInstanceIPArray']
+
+        return ret
+
 
 if __name__ == '__main__':
     raise SystemExit()
