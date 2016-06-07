@@ -1,14 +1,15 @@
 # -*- coding:utf-8 -*-
 
 '''
-Aliyun SDK library
-==================
-AliyunSDK is a Aliyun ECS, SLB and RDS API SDK library, written in Python.
+AliyunSDK
+=========
+AliyunSDK is an Aliyun ECS, SLB and RDS API SDK library, written in Python.
 
-usage:
-   >>> import AliyunSDK
-   >>> rds = AliyunSDK.RDS(access_id, access_secret)
-   >>> rds.show_region_list()
+Example:
+    >>> import AliyunSDK
+    >>> rds = AliyunSDK.RDS(access_id, access_secret)
+    >>> ret = rds.show_instance_info(db_instance_id)
+    >>> print ret
 '''
 
 from rds import RDS
