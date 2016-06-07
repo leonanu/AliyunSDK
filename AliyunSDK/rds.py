@@ -21,30 +21,45 @@ class RDS(object):
         if len(account_name) > 16:
             raise SystemExit('The max account name length is 16!')
 
-        if not re.search(u'^[_a-zA-Z0-9]+$', account_name):
+        elif not re.search(u'^[_a-zA-Z0-9]+$', account_name):
             raise SystemExit('Account name can be only made by 0-9, a-Z and _ !')
 
-        if not re.search(u'^[a-zA-Z]+$', account_name[0]):
+        elif not re.search(u'^[a-zA-Z]+$', account_name[0]):
             raise SystemExit('Account name must start with a-Z!')
+
+        else:
+            ret = True
+
+        return ret
 
     # Check password legality.
     def check_password(self, account_pass):
         if (len(account_pass) < 6) or (len(account_pass)) > 32:
             raise SystemExit('The length of password is 6-32!')
 
-        if not re.search(u'^[_a-zA-Z0-9]+$', account_pass):
+        elif not re.search(u'^[_a-zA-Z0-9]+$', account_pass):
             raise SystemExit('Password can be only made by 0-9, a-Z and _ !')
+
+        else:
+            ret = True
+
+        return ret
 
     # Check description legality.
     def check_mark(self, account_mark):
         if (len(account_mark) < 2) or (len(account_mark) > 256):
             raise SystemExit('The length of description is 2-256!')
 
-        if re.search(u'^http://|^https://', account_mark):
+        elif re.search(u'^http://|^https://', account_mark):
             raise SystemExit('Description can not start with http:// or https://')
 
-        if not re.search(u'^[_a-zA-Z0-9\-\s]+$', account_mark):
+        elif not re.search(u'^[_a-zA-Z0-9\-\s]+$', account_mark):
             raise SystemExit('Description can be only made by 0-9, a-Z, _ and - !')
+
+        else:
+            ret = True
+
+        return ret
 
     # Show all reginons of Aliyun.
     def show_region_list(self):
@@ -123,17 +138,23 @@ class RDS(object):
                'DBInstanceId':instance_id
                }
 
-        ret = self.API.request(req)
+        res = self.API.request(req)
+
+        res.pop('RequestId')
+
+        ret = res
 
         return ret
 
-    # Show all databases list of specific instances ID.
-    def show_db_list(self, instance_id):
+    # Show all databases full list of specific instances.
+    def show_db_full_list(self, instance_id):
         req = {'Action':'DescribeDatabases',
                'DBInstanceId':instance_id
                }
 
-        ret = self.API.request(req)['Databases']['Database']
+        res = self.API.request(req)
+
+        ret = res['Databases']['Database']
 
         return ret
 
@@ -144,27 +165,31 @@ class RDS(object):
                'DBName':db_name
                }
 
-        ret = self.API.request(req)['Databases']['Database']
+        res = self.API.request(req)
+
+        ret = res['Databases']['Database']
 
         return ret
 
-    # Show all databases name of specific instances ID.
-    def show_db_name(self, instance_id):
-        full_list = self.show_db_list(instance_id)
+    # Show all databases of specific instances.
+    def show_db_list(self, instance_id):
+        db_full_list = self.show_db_full_list(instance_id)
 
         ret = []
-        for i in full_list:
-            ret.append(i['DBName'])
+        for db_name in db_full_list:
+            ret.append(db_name['DBName'])
 
         return ret
 
-    # Show all accounts list of specific instances ID.
-    def show_account_list(self, instance_id):
+    # Show all accounts full list of specific instances.
+    def show_account_full_list(self, instance_id):
         req = {'Action':'DescribeAccounts',
                'DBInstanceId':instance_id
                }
 
-        ret = self.API.request(req)['Accounts']['DBInstanceAccount']
+        res = self.API.request(req)
+
+        ret = res['Accounts']['DBInstanceAccount']
 
         return ret
 
@@ -175,17 +200,19 @@ class RDS(object):
                'AccountName':account_name
                }
 
-        ret = self.API.request(req)['Accounts']['DBInstanceAccount']
+        res = self.API.request(req)
+
+        ret = res['Accounts']['DBInstanceAccount']
 
         return ret
 
-    # Show all accounts name of specific instances ID.
-    def show_account_name(self, instance_id):
-        full_list = self.show_account_list(instance_id)
+    # Show all accounts of specific instances.
+    def show_account_list(self, instance_id):
+        account_full_list = self.show_account_full_list(instance_id)
 
         ret = []
-        for i in full_list:
-            ret.append(i['AccountName'])
+        for account in account_full_list:
+            ret.append(account['AccountName'])
 
         return ret
 
@@ -197,10 +224,10 @@ class RDS(object):
 
         confirm_timeout = CONFIRM_TIMEOUT
 
-        full_list = self.show_account_name(instance_id)
+        account_list = self.show_account_list(instance_id)
 
-        if account_name in full_list:
-            ret = 'Exist!'
+        if account_name in account_list:
+            ret = 'User ' + account_name + ' already exists!'
 
             return ret
 
@@ -211,29 +238,29 @@ class RDS(object):
                'AccountDescription':account_mark
                }
 
-        ret = self.API.request(req)
+        res = self.API.request(req)
+
         time.sleep(RESULT_TIMEWAIT)
 
-        if ret.has_key('RequestId'):
-            ret = ret['RequestId']
+        if res.has_key('RequestId'):
+            ret = res['RequestId']
         else:
-            raise SystemExit('Add account failed!')
+            raise SystemExit('Add account ' + account_name + ' failed!')
 
         loop = True
         while loop:
-            time.sleep(1)
-
-            if account_name in self.show_account_name(instance_id):
+            if account_name in self.show_account_list(instance_id):
                 loop = False
 
             confirm_timeout -= 1
+
             if confirm_timeout == 0:
-                raise SystemExit('Add account timed out!')
+                raise SystemExit('Add account ' + account_name + ' timed out!')
 
         return ret
 
     # Grant privilege to specific database.
-    def grant(self, instance_id, account_name, db_name, priv_type):
+    def grant_account(self, instance_id, account_name, db_name, priv_type):
         confirm_timeout = CONFIRM_TIMEOUT
 
         if priv_type == 'ro':
@@ -241,20 +268,20 @@ class RDS(object):
         elif priv_type == 'rw':
             priv_type = 'ReadWrite'
         else:
-            raise SystemExit('Privilege type can be only ro and rw!')
+            raise SystemExit('Privilege type can be only ro / rw!')
 
-        user_list = self.show_account_name(instance_id)
-        if account_name not in user_list:
-            raise SystemExit(account_name + ' user not exist! Create first!')
+        account_list = self.show_account_list(instance_id)
+        if account_name not in account_list:
+            raise SystemExit('Account ' + account_name + ' not exist!')
 
-        db_list = self.show_db_name(instance_id)
+        db_list = self.show_db_list(instance_id)
         if db_name not in db_list:
-            raise SystemExit(db_name + ' database not exist!')
+            raise SystemExit('Database ' + db_name + ' not exist!')
 
-        for i in self.show_account_info(instance_id, account_name):
-            for k in i['DatabasePrivileges']['DatabasePrivilege']:
-                if (k['DBName'] == db_name) and (k['AccountPrivilege'] == priv_type):
-                    ret = 'Exist!'
+        for account_info in self.show_account_info(instance_id, account_name):
+            for account in account_info['DatabasePrivileges']['DatabasePrivilege']:
+                if (account['DBName'] == db_name) and (account['AccountPrivilege'] == priv_type):
+                    ret = account_name + ':' + db_name + ':' + priv_type + ' Privilege Already Exists!'
 
                     return ret
 
@@ -265,39 +292,43 @@ class RDS(object):
                'AccountPrivilege':priv_type
                }
 
-        ret = self.API.request(req)
+        res = self.API.request(req)
+
         time.sleep(RESULT_TIMEWAIT)
 
-        if ret.has_key('RequestId'):
-            ret = ret['RequestId']
+        if res.has_key('RequestId'):
+            ret = res['RequestId']
         else:
-            ret = False
+            raise SystemExit('Grant account ' + account_name + ' failed!')
 
         loop = True
         while loop:
-            time.sleep(1)
-
-            for i in self.show_account_info(instance_id, account_name):
-                for k in i['DatabasePrivileges']['DatabasePrivilege']:
-                    if (k['DBName'] == db_name) and (k['AccountPrivilege'] == priv_type):
+            for account_info in self.show_account_info(instance_id, account_name):
+                for account in account_info['DatabasePrivileges']['DatabasePrivilege']:
+                    if (account['DBName'] == db_name) and (account['AccountPrivilege'] == priv_type):
                         loop = False
 
             confirm_timeout -= 1
+
             if confirm_timeout == 0:
-                raise SystemExit('Grant privilege timed out!')
+                raise SystemExit('Grant privilege for ' + account_name + ' timed out!')
 
         return ret
 
-    # Modify account description.
-    def change_account_mark(self, instance_id, account_name, account_mark):
+    # Set account description.
+    def set_account_description(self, instance_id, account_name, account_mark):
         self.check_username(account_name)
         self.check_mark(account_mark)
 
         confirm_timeout = CONFIRM_TIMEOUT
 
-        for i in self.show_account_info(instance_id, account_name):
-            if i['AccountDescription'] == account_mark:
-                ret = 'Exist!'
+        account_list = self.show_account_list(instance_id)
+        if account_name not in account_list:
+            raise SystemExit('Account ' + account_name + ' not exist!')
+
+        for account_info in self.show_account_info(instance_id, account_name):
+            if account_info['AccountDescription'] == account_mark:
+                ret = 'User ' + account_name + ' already had description ' + account_mark
 
                 return ret
 
@@ -307,25 +338,24 @@ class RDS(object):
                'AccountDescription':account_mark
                }
 
-        ret = self.API.request(req)
+        res = self.API.request(req)
+
         time.sleep(RESULT_TIMEWAIT)
 
-        if ret.has_key('RequestId'):
-            ret = ret['RequestId']
+        if res.has_key('RequestId'):
+            ret = res['RequestId']
         else:
-            ret = False
+            raise SystemExit('Set description for account ' + account_name + ' failed!')
 
         loop = True
         while loop:
-            time.sleep(1)
-
-            for i in self.show_account_info(instance_id, account_name):
-                if i['AccountDescription'] == account_mark:
+            for account_info in self.show_account_info(instance_id, account_name):
+                if account_info['AccountDescription'] == account_mark:
                     loop = False
 
             confirm_timeout -= 1
             if confirm_timeout == 0:
-                raise SystemExit('Modify account description timed out!')
+                raise SystemExit('Set description for account ' + account_name + ' timed out!')
 
         return ret
 
