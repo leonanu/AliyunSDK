@@ -101,6 +101,7 @@ class RDS(object):
 
         if page_num == 0:
             page_num = 1
+
         elif (page_num > 0) and (total_records % PAGE_SIZE != 0):
             page_num += 1
 
@@ -368,6 +369,55 @@ class RDS(object):
         res = self.API.request(req)
 
         ret = res['Items']['DBInstanceIPArray']
+
+        return ret
+
+    # Show slow_log list of database in specific instance.
+    def show_slowlog_records(self, instance_id, db_name, start_time, end_time):
+        req = {'Action':'DescribeSlowLogs',
+               'DBInstanceId':instance_id,
+               'DBName':db_name,
+               'StartTime':start_time,
+               'EndTime':end_time,
+               'PageSize':PAGE_SIZE
+               }
+
+        res = self.API.request(req)
+
+        total_records = res['TotalRecordCount']
+
+        if total_records == 0:
+            ret = 'No slow log in database ' + db_name + ' of ' + instance_id
+
+            return ret
+
+        page_num = total_records / PAGE_SIZE
+
+        if page_num == 0:
+            page_num = 1
+
+        elif (page_num > 0) and (total_records % PAGE_SIZE != 0):
+            page_num += 1
+
+        ret = []
+        for page in range(page_num):
+            pn = page + 1
+
+            req = {'Action':'DescribeSlowLogs',
+                   'DBInstanceId':instance_id,
+                   'DBName':db_name,
+                   'StartTime':start_time,
+                   'EndTime':end_time,
+                   'PageSize':PAGE_SIZE,
+                   'PageNumber':pn
+                   }
+
+            res = self.API.request(req)
+
+            page_list = res['Items']['SQLSlowLog']
+
+            for slowlog in page_list:
+                ret.append(slowlog)
 
         return ret
 
