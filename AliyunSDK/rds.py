@@ -89,7 +89,7 @@ class RDS(object):
         elif (page_num > 0) and (total_records % PAGE_SIZE != 0):
             page_num += 1
 
-        page_list = []
+        ret = []
         for page in range(page_num):
             pn = page + 1
 
@@ -101,11 +101,8 @@ class RDS(object):
 
             res = self.API.request(req)
 
-            page_list.append(res['Items']['DBInstance'])
-
-        ret = []
-        for page_instance in page_list:
-            for instance in page_instance:
+            page_list = res['Items']['DBInstance']
+            for instance in page_list:
                 ret.append(instance)
 
         return ret
