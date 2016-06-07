@@ -6,4 +6,3 @@ script: "python setup.py install"
 matrix:
   include:
     - python: "2.7"
-      env: TEST_PEP8=1
