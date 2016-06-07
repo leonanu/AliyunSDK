@@ -1,6 +1,8 @@
 # AliyunSDK
 
 AliyunSDK is a Aliyun ECS, SLB and RDS API SDK library, written in Python.       
+
+[![Build Status](https://travis-ci.org/leonanu/AliyunSDK.svg?branch=master)](https://travis-ci.org/leonanu/AliyunSDK)
                                                                                  
 **usage:**
 ```
