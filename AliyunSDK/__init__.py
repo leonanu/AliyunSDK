@@ -13,6 +13,7 @@ Example:
 '''
 
 from rds import RDS
+from ecs import ECS
 
 
 __title__ = 'AliyunSDK'

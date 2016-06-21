@@ -44,7 +44,7 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
-test.py
+test*.py
 
 # Translations
 *.mo
