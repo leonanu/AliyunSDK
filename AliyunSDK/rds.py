@@ -153,9 +153,7 @@ class RDS(object):
                'DBInstanceId':instance_id
                }
 
-        res = self.API.request(req)
-
-        ret = res['Databases']['Database']
+        ret = self.API.request(req)
 
         return ret
 
