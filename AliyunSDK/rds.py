@@ -133,8 +133,8 @@ class RDS(object):
 
         return ret
 
-    # Show an instance connection information.
-    def show_instance_conn(self, instance_id):
+    # Show an instance network information.
+    def show_instance_netinfo(self, instance_id):
         req = {'Action':'DescribeDBInstanceNetInfo',
                'DBInstanceId':instance_id
                }
